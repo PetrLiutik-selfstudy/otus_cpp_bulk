@@ -1,9 +1,9 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
 if (DEFINED ENV{TRAVIS_BUILD_NUMBER})
-    project(matrix VERSION 1.1.$ENV{TRAVIS_BUILD_NUMBER})
+    project(bulk VERSION 1.1.$ENV{TRAVIS_BUILD_NUMBER})
 else ()
-    project(matrix VERSION 1.1.1)
+    project(bulk VERSION 1.1.1)
 endif ()
 
 # Setup application
