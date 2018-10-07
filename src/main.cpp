@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <functional>
 
 class IStreamWriter {
   public:
@@ -29,8 +30,6 @@ class FileWriter : public IStreamWriter {
 class IObservable {
   public:
     virtual void subscribe(std::unique_ptr<IStreamWriter> observer) = 0;
-
-    virtual void publish(std::string&) = 0;
 };
 
 
@@ -57,8 +56,35 @@ class BulkPool {
     std::vector<std::string> pool_{};
 };
 
+class OpenBlockInterpreter {
+  public:
+    void interpret(std::string& cmd) {
+    }
+
+  private:
+      size_t open_braces_{};
+};
+
+
+class CloseBlockInterpreter {
+  public:
+    void interpret(std::string& cmd) {
+    }
+
+  private:
+      size_t open_braces_{};
+};
 
 class CmdInterpreter {
+  public:
+    void interpret(std::string& cmd) {
+    }
+
+  private:
+      size_t open_braces_{};
+};
+
+class EofInterpreter {
   public:
     void interpret(std::string& cmd) {
     }
@@ -70,51 +96,37 @@ class CmdInterpreter {
 class CmdProcessor : public IObservable  {
   public:
     CmdProcessor(size_t bulk_size) : bulk_size_(bulk_size) {
-
     }
 
     void subscribe(std::unique_ptr<IStreamWriter> observer) final {
       stream_writers_.emplace_back(std::move(observer));
     }
 
+
+
     void interpret(std::string& cmd) {
-      if (cmd == "{") {
-        flush();
+      if(cmd == "{") {
+        bulk_pool_.flush(publish);
         ++open_braces_;
-      } else if (cmd == "}") {
-        if (open_braces_) {
+      } else if(cmd == "}") {
+        if(open_braces_) {
           --open_braces_;
-          flush();
+          bulk_pool_.flush(publish);
         }
       } else {
-        push(cmd);
-        if(!is_block_ && (size() == bulk_size_)) {
-          flush();
+        bulk_pool_.push(cmd);
+        if((open_braces_ == 0) && (bulk_pool_.size() == bulk_size_)) {
+          bulk_pool_.flush(publish);
         }
       }
     }
 
   private:
 
-    void push(std::string& str) {
-      pool_.emplace_back(str);
-    }
-
-    void flush() {
-      for(auto it: pool_)
-        publish(it);
-      pool_.clear();
-    }
-
-    size_t size() {
-      return pool_.size();
-    }
-
-    void publish(std::string& str) final {
+    std::function<void(const std::string& str)> publish = [&](const std::string& str) {
       for(auto& it: stream_writers_)
         it->write(str);
-    }
-
+    };
 
 
     std::vector<std::unique_ptr<IStreamWriter>> stream_writers_{};
@@ -123,8 +135,6 @@ class CmdProcessor : public IObservable  {
     size_t bulk_size_{};
 
     size_t open_braces_{};
-
-    std::vector<std::string> pool_{};
 };
 
 
