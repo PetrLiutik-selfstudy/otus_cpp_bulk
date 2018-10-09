@@ -132,6 +132,16 @@ class CmdProcessor : public IObservable  {
         bulk_pool_.flush(publish);
     }
 
+    void process() {
+      for(std::string input; getline(is_, input);) {
+        std::string cmd;
+        bool is_bulk_end = interpreter_.interpret(input, cmd);
+        bulk_pool_.push(cmd);
+        if(is_bulk_end)
+          bulk_pool_.flush(publish);
+      }
+    }
+
   private:
 
     using publish_t = std::function<void(const bulk_time_t& bulk_time,
@@ -152,40 +162,61 @@ class CmdProcessor : public IObservable  {
 
 
 
-int main()
+int main(int argc, char const *argv[])
 {
-  CmdProcessor cmd_processor(3);
+//  CmdProcessor cmd_processor(3);
 
-  cmd_processor.subscribe(std::make_unique<FileWriter>());
-  cmd_processor.subscribe(std::make_unique<ConsoleWriter>());
+//  cmd_processor.subscribe(std::make_unique<FileWriter>());
+//  cmd_processor.subscribe(std::make_unique<ConsoleWriter>());
 
-  std::string cmd1 = "cmd1";
-  std::string cmd2 = "cmd2";
-  std::string cmd3 = "cmd3";
-  std::string openBrace = "{";
-  std::string closeBrace = "}";
+//  std::string cmd1 = "cmd1";
+//  std::string cmd2 = "cmd2";
+//  std::string cmd3 = "cmd3";
+//  std::string openBrace = "{";
+//  std::string closeBrace = "}";
 
-  cmd_processor.process(cmd1);
-  cmd_processor.process(cmd2);
-  cmd_processor.process(cmd3);
-  cmd_processor.process(cmd3);
-  cmd_processor.process(openBrace);
-  cmd_processor.process(cmd1);
-  cmd_processor.process(openBrace);
-  cmd_processor.process(cmd2);
-  cmd_processor.process(openBrace);
-  cmd_processor.process(cmd3);
-  cmd_processor.process(cmd3);
-  cmd_processor.process(closeBrace);
-  cmd_processor.process(cmd2);
-  cmd_processor.process(closeBrace);
-  cmd_processor.process(cmd1);
-  cmd_processor.process(closeBrace);
+//  cmd_processor.process(cmd1);
+//  cmd_processor.process(cmd2);
+//  cmd_processor.process(cmd3);
+//  cmd_processor.process(cmd3);
+//  cmd_processor.process(openBrace);
+//  cmd_processor.process(cmd1);
+//  cmd_processor.process(openBrace);
+//  cmd_processor.process(cmd2);
+//  cmd_processor.process(openBrace);
+//  cmd_processor.process(cmd3);
+//  cmd_processor.process(cmd3);
+//  cmd_processor.process(closeBrace);
+//  cmd_processor.process(cmd2);
+//  cmd_processor.process(closeBrace);
+//  cmd_processor.process(cmd1);
+//  cmd_processor.process(closeBrace);
 
   std::cout << "bulk version: "
             << ver_major() << "."
             << ver_minor() << "."
             << ver_patch() << std::endl;
+
+  if(argc < 2) {
+    std::cerr << "Wrong number of arguments.\n" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  auto bulk_size = std::strtoll(argv[1], nullptr, 0);
+  if (bulk_size <= 0) {
+    std::cerr << "Bulk size must be greather than 0.\n";
+    return EXIT_FAILURE;
+  }
+
+  std::fstream fs;
+  fs.open("input.log", std::ios::in);
+
+  CmdProcessor cmd_processor(static_cast<size_t>(bulk_size), fs);
+
+  cmd_processor.subscribe(std::make_unique<FileWriter>());
+  cmd_processor.subscribe(std::make_unique<ConsoleWriter>());
+
+  cmd_processor.process();
 
   return 0;
 }
