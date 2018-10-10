@@ -5,10 +5,12 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <list>
 #include <functional>
 #include <sstream>
 #include <fstream>
 #include <ctime>
+#include <algorithm>
 
 
 using bulk_time_t = std::time_t;
@@ -54,7 +56,8 @@ class FileWriter : public IStreamWriter {
 class IObservable {
   public:
     virtual ~IObservable() = default;
-    virtual void subscribe(std::unique_ptr<IStreamWriter> observer) = 0;
+    virtual void subscribe(const std::shared_ptr<IStreamWriter>& observer) = 0;
+    virtual void unsubscribe(const std::shared_ptr<IStreamWriter>& observer) = 0;
 };
 
 class BulkPool {
@@ -89,14 +92,24 @@ class CmdInterpreter {
     ~CmdInterpreter() = default;
 
     bool interpret(const std::string& input, std::string& cmd) {
-      if(input == "{") {
+      if(input.empty()) {
+        /// Завершение по EOF.
+        if((tokens_ == 0) && (size_ > 0)) {
+          size_ = 0;
+          return true;
+        }
+      } else if(input == "{") {
+        /// Начало блока.
+        size_ = 0;
         if(tokens_++ == 0)
           return true;
       } else if(input == "}") {
+        /// Конец блока.
         if(tokens_ > 0)
           if(--tokens_ == 0)
             return true;
       } else {
+        /// Команда.
         cmd = input;
         if((tokens_ == 0) && (++size_ == bulk_size_)) {
           size_ = 0;
@@ -114,26 +127,34 @@ class CmdInterpreter {
 };
 
 class CmdProcessor : public IObservable  {
+    using observer_t = std::weak_ptr<IStreamWriter>;
   public:
-    CmdProcessor(size_t bulk_size, std::istream& is = std::cin) : is_(is), interpreter_(bulk_size) {
+    CmdProcessor(size_t bulk_size) : interpreter_(bulk_size) {
     }
 
     virtual ~CmdProcessor() = default;
 
-    void subscribe(std::unique_ptr<IStreamWriter> observer) final {
-      stream_writers_.emplace_back(std::move(observer));
+    void subscribe(const std::shared_ptr<IStreamWriter>& observer) final {
+      auto it = std::find_if(observers_.begin(), observers_.end(), [&observer](observer_t& p) {
+          return p.lock() == observer;
+      });
+      if(it == observers_.end())
+        observers_.emplace_back(observer);
     }
 
-    void process(const std::string& input) {
-      std::string cmd;
-      bool is_bulk_end = interpreter_.interpret(input, cmd);
-      bulk_pool_.push(cmd);
-      if(is_bulk_end)
-        bulk_pool_.flush(publish);
+    void unsubscribe(const std::shared_ptr<IStreamWriter>& observer) final {
+      auto it = std::find_if(observers_.begin(), observers_.end(), [&observer](observer_t& p) {
+        return p.lock() == observer;
+      });
+      if(it != observers_.end())
+        observers_.erase(it);
     }
 
-    void process() {
-      for(std::string input; getline(is_, input);) {
+    void process(std::istream& is) {
+      for(bool is_eof = false; !is_eof;) {
+        std::string input;
+        is_eof = !std::getline(is, input);
+
         std::string cmd;
         bool is_bulk_end = interpreter_.interpret(input, cmd);
         bulk_pool_.push(cmd);
@@ -147,13 +168,16 @@ class CmdProcessor : public IObservable  {
     using publish_t = std::function<void(const bulk_time_t& bulk_time,
                                          const bulk_t& cmds)>;
     publish_t publish = [&](const bulk_time_t& bulk_time, const bulk_t& bulk) {
-      for(auto& it: stream_writers_)
-        it->write(bulk_time, bulk);
+      for(auto& it: observers_) {
+        if(!it.expired()) {
+          auto p = it.lock();
+          p->write(bulk_time, bulk);
+        }
+      }
     };
 
 
-    std::vector<std::unique_ptr<IStreamWriter>> stream_writers_{};
-    std::istream& is_;
+    std::list<observer_t> observers_{};
     BulkPool bulk_pool_;
     CmdInterpreter interpreter_;
 };
@@ -164,34 +188,6 @@ class CmdProcessor : public IObservable  {
 
 int main(int argc, char const *argv[])
 {
-//  CmdProcessor cmd_processor(3);
-
-//  cmd_processor.subscribe(std::make_unique<FileWriter>());
-//  cmd_processor.subscribe(std::make_unique<ConsoleWriter>());
-
-//  std::string cmd1 = "cmd1";
-//  std::string cmd2 = "cmd2";
-//  std::string cmd3 = "cmd3";
-//  std::string openBrace = "{";
-//  std::string closeBrace = "}";
-
-//  cmd_processor.process(cmd1);
-//  cmd_processor.process(cmd2);
-//  cmd_processor.process(cmd3);
-//  cmd_processor.process(cmd3);
-//  cmd_processor.process(openBrace);
-//  cmd_processor.process(cmd1);
-//  cmd_processor.process(openBrace);
-//  cmd_processor.process(cmd2);
-//  cmd_processor.process(openBrace);
-//  cmd_processor.process(cmd3);
-//  cmd_processor.process(cmd3);
-//  cmd_processor.process(closeBrace);
-//  cmd_processor.process(cmd2);
-//  cmd_processor.process(closeBrace);
-//  cmd_processor.process(cmd1);
-//  cmd_processor.process(closeBrace);
-
   std::cout << "bulk version: "
             << ver_major() << "."
             << ver_minor() << "."
@@ -204,19 +200,52 @@ int main(int argc, char const *argv[])
 
   auto bulk_size = std::strtoll(argv[1], nullptr, 0);
   if (bulk_size <= 0) {
-    std::cerr << "Bulk size must be greather than 0.\n";
+    std::cerr << "Bulk size must be greater than 0.\n";
     return EXIT_FAILURE;
   }
 
-  std::fstream fs;
-  fs.open("input.log", std::ios::in);
+  std::stringstream ss;
+  ss << "cmd1\n";
+  ss << "cmd2\n";
+  ss << "cmd3\n";
+  ss << "cmd4\n";
+  ss << "cmd5\n";
+  ss << "{\n";
+  ss << "cmd1\n";
+  ss << "{\n";
+  ss << "cmd2\n";
+  ss << "{\n";
+  ss << "cmd3\n";
+  ss << "cmd4\n";
+  ss << "}\n";
+  ss << "cmd5\n";
+  ss << "}\n";
+  ss << "cmd6\n";
+  ss << "}\n";
+  ss << "cmd1\n";
+  ss << "cmd2\n";
 
-  CmdProcessor cmd_processor(static_cast<size_t>(bulk_size), fs);
 
-  cmd_processor.subscribe(std::make_unique<FileWriter>());
-  cmd_processor.subscribe(std::make_unique<ConsoleWriter>());
+//  std::fstream fs;
+//  fs.open("input.log", std::ios::in);
 
-  cmd_processor.process();
+  CmdProcessor cmd_processor(static_cast<size_t>(bulk_size));
+
+  auto fileWriter = std::make_shared<FileWriter>();
+  auto consoleWriter = std::make_shared<ConsoleWriter>();
+
+//  cmd_processor.subscribe(fileWriter);
+  cmd_processor.subscribe(consoleWriter);
+
+  cmd_processor.process(ss);
+
+  cmd_processor.unsubscribe(fileWriter);
+
+  std::stringstream ss1;
+  ss1 << "cmd1\n";
+  ss1 << "cmd2\n";
+  ss1 << "cmd3\n";
+  cmd_processor.process(ss1);
 
   return 0;
 }
