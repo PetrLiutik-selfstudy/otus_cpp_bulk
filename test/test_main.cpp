@@ -61,6 +61,7 @@ TEST(cmd_processor_test_case, subscribe_test) {
   cmd_processor.process(ss);
 
   EXPECT_EQ(testWriter->get_bulk(), std::vector<std::string>{"cmd1"});
+  EXPECT_NE(testWriter->get_time(), std::time_t{});
 }
 
 TEST(cmd_processor_test_case, unsubscribe_test) {
@@ -77,6 +78,24 @@ TEST(cmd_processor_test_case, unsubscribe_test) {
   EXPECT_EQ(testWriter->get_bulk(), std::vector<std::string>{});
   EXPECT_EQ(testWriter->get_time(), std::time_t{});
 }
+
+TEST(cmd_processor_test_case, full_bulk_test) {
+  bulk::CmdProcessor cmd_processor{3};
+  auto testWriter = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(testWriter);
+
+  std::stringstream ss;
+  ss << "cmd1" << std::endl;
+  ss << "cmd2" << std::endl;
+  ss << "cmd3" << std::endl;
+
+  cmd_processor.process(ss);
+
+  std::vector<std::string> result{"cmd1", "cmd2", "cmd3"};
+  EXPECT_EQ(testWriter->get_bulk(), result);
+  EXPECT_NE(testWriter->get_time(), std::time_t{});
+}
+
 
 int main(int argc, char *argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
