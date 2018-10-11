@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
 
 TEST(ver_test_case, ver_major_test) {
   EXPECT_GE(ver_major(), 1);
@@ -38,8 +39,8 @@ class TestWriter : public IStreamWriter {
       return bulk_;
     }
 
-    auto get_bulk_time() {
-      return time;
+    auto get_time() {
+      return time_;
     }
 
   private:
@@ -48,6 +49,19 @@ class TestWriter : public IStreamWriter {
 };
 
 } // namespace bulk.
+
+TEST(cmd_processor_test_case, subscribe_test) {
+  bulk::CmdProcessor cmd_processor;
+  auto testWriter = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(testWriter);
+
+  std::stringstream ss;
+  ss << "cmd1";
+
+  cmd_processor.process(ss);
+
+  EXPECT_EQ(testWriter->get_bulk(), std::vector<std::string>{"cmd1"});
+}
 
 int main(int argc, char *argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
