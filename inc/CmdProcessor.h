@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "BulkPool.h"
-#include "CmdInterpreter.h"
-#include "IObservable.h"
+#include "../inc/BulkPool.h"
+#include "../inc/CmdInterpreter.h"
+#include "../inc/IObservable.h"
 
 #include <functional>
 #include <list>

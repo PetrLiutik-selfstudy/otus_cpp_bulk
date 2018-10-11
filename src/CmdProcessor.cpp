@@ -1,4 +1,4 @@
-﻿#include "CmdProcessor.h"
+﻿#include "../inc/CmdProcessor.h"
 
 #include <algorithm>
 #include <istream>

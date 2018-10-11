@@ -1,4 +1,4 @@
-﻿#include "ConsoleWriter.h"
+﻿#include "../inc/ConsoleWriter.h"
 
 #include <iostream>
 #include <sstream>

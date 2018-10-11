@@ -1,9 +1,9 @@
 ﻿#include <iostream>
 
-#include "CmdProcessor.h"
-#include "ConsoleWriter.h"
-#include "FileWriter.h"
-#include "ver.h"
+#include "../inc/CmdProcessor.h"
+#include "../inc/ConsoleWriter.h"
+#include "../inc/FileWriter.h"
+#include "../inc/ver.h"
 
 #include <iostream>
 

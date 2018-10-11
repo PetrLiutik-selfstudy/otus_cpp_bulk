@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "IStreamWriter.h"
+#include "../inc/IStreamWriter.h"
 
 namespace bulk {
 
