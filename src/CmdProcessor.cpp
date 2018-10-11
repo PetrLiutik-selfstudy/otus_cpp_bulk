@@ -1,6 +1,7 @@
 ﻿#include "CmdProcessor.h"
 
 #include <algorithm>
+#include <istream>
 
 namespace bulk {
 
