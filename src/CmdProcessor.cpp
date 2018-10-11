@@ -22,9 +22,9 @@ void CmdProcessor::unsubscribe(const std::shared_ptr<IStreamWriter>& observer) {
 }
 
 void CmdProcessor::process(std::istream& is) {
-  for(bool is_eof = false; !is_eof; is_eof = is.eof()) {
+  for(bool is_eof = false; !is_eof;) {
     std::string input;
-    std::getline(is, input);
+    is_eof = !std::getline(is, input);
 
     std::string cmd;
     bool is_bulk_end = interpreter_.interpret(input, cmd);

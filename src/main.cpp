@@ -5,8 +5,7 @@
 #include "FileWriter.h"
 #include "ver.h"
 
-#include <sstream>
-#include <fstream>
+#include <iostream>
 
 
 int main(int argc, char const *argv[])
@@ -27,30 +26,6 @@ int main(int argc, char const *argv[])
     return EXIT_FAILURE;
   }
 
-  std::stringstream ss;
-  ss << "cmd1\n";
-  ss << "cmd2\n";
-  ss << "cmd3\n";
-  ss << "cmd4\n";
-  ss << "cmd5\n";
-  ss << "{\n";
-  ss << "cmd1\n";
-  ss << "{\n";
-  ss << "cmd2\n";
-  ss << "{\n";
-  ss << "cmd3\n";
-  ss << "cmd4\n";
-  ss << "}\n";
-  ss << "cmd5\n";
-  ss << "}\n";
-  ss << "cmd6\n";
-  ss << "}\n";
-  ss << "cmd1\n";
-  ss << "cmd2\n";
-
-
-//  std::fstream fs;
-//  fs.open("input.log", std::ios::in);
 
   bulk::CmdProcessor cmd_processor(static_cast<size_t>(bulk_size));
 
@@ -60,15 +35,10 @@ int main(int argc, char const *argv[])
   cmd_processor.subscribe(fileWriter);
   cmd_processor.subscribe(consoleWriter);
 
-  cmd_processor.process(ss);
+  cmd_processor.process(std::cin);
 
-//  cmd_processor.unsubscribe(fileWriter);
-
-  std::stringstream ss1;
-  ss1 << "cmd1\n";
-  ss1 << "cmd2\n";
-  ss1 << "cmd3\n";
-  cmd_processor.process(ss1);
+  cmd_processor.unsubscribe(consoleWriter);
+  cmd_processor.unsubscribe(fileWriter);
 
   return 0;
 }

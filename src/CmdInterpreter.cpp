@@ -11,9 +11,10 @@ bool CmdInterpreter::interpret(const std::string& input, std::string& cmd) {
     }
   } else if(input == "{") {
     /// Начало блока.
-    size_ = 0;
-    if(tokens_++ == 0)
+    if((tokens_++ == 0) && (size_ > 0)) {
+      size_ = 0;
       return true;
+    }
   } else if(input == "}") {
     /// Конец блока.
     if(tokens_ > 0)
