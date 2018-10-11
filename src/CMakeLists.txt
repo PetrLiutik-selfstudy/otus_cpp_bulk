@@ -6,9 +6,22 @@ else ()
     project(bulk VERSION 1.1.1)
 endif ()
 
+
 # Setup application
 add_executable(${PROJECT_NAME} main.cpp
                                ver.cpp
+                               BulkPool.cpp
+                               CmdInterpreter.cpp
+                               CmdProcessor.cpp
+                               ConsoleWriter.cpp
+                               FileWriter.cpp
+                               ../inc/BulkPool.h
+                               ../inc/CmdInterpreter.h
+                               ../inc/CmdProcessor.h
+                               ../inc/ConsoleWriter.h
+                               ../inc/FileWriter.h
+                               ../inc/IObservable.h
+                               ../inc/IStreamWriter.h
                                ../inc/ver.h)
 
 configure_file(version.h.in ${PROJECT_SOURCE_DIR}/version.h)
