@@ -51,7 +51,7 @@ class TestWriter : public IStreamWriter {
 } // namespace bulk.
 
 TEST(cmd_processor_test_case, subscribe_test) {
-  bulk::CmdProcessor cmd_processor;
+  bulk::CmdProcessor cmd_processor{1};
   auto testWriter = std::make_shared<bulk::TestWriter>();
   cmd_processor.subscribe(testWriter);
 
