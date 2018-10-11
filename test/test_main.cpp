@@ -1,5 +1,8 @@
 ﻿#include "gtest/gtest.h"
-#include "../inc/ver.h"
+#include "ver.h"
+#include "CmdProcessor.h"
+#include "ConsoleWriter.h"
+#include "FileWriter.h"
 
 TEST(ver_test_case, ver_major_test) {
   EXPECT_GE(ver_major(), 1);

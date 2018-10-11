@@ -4,6 +4,7 @@
 enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIR})
+include_directories("${PROJECT_SOURCE_DIR}/inc")
 
 add_executable(${PROJECT_NAME} test_main.cpp
                                ../src/ver.cpp
