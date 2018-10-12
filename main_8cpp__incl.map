@@ -1,0 +1,10 @@
+<map id="src/main.cpp" name="src/main.cpp">
+<area shape="rect" id="node3" href="$CmdProcessor_8h.html" title="../inc/CmdProcessor.h" alt="" coords="426,80,579,107"/>
+<area shape="rect" id="node14" href="$ConsoleWriter_8h.html" title="../inc/ConsoleWriter.h" alt="" coords="79,80,227,107"/>
+<area shape="rect" id="node16" href="$FileWriter_8h.html" title="../inc/FileWriter.h" alt="" coords="252,80,375,107"/>
+<area shape="rect" id="node17" href="$ver_8h.html" title="../inc/ver.h" alt="" coords="603,80,687,107"/>
+<area shape="rect" id="node4" href="$BulkPool_8h.html" title="../inc/BulkPool.h" alt="" coords="589,229,707,256"/>
+<area shape="rect" id="node8" href="$CmdInterpreter_8h.html" title="../inc/CmdInterpreter.h" alt="" coords="731,229,884,256"/>
+<area shape="rect" id="node9" href="$IObservable_8h.html" title="../inc/IObservable.h" alt="" coords="461,155,596,181"/>
+<area shape="rect" id="node10" href="$IStreamWriter_8h.html" title="../inc/IStreamWriter.h" alt="" coords="324,229,471,256"/>
+</map>
