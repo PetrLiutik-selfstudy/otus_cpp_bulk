@@ -52,37 +52,53 @@ class TestWriter : public IStreamWriter {
 
 TEST(cmd_processor_test_case, subscribe_test) {
   bulk::CmdProcessor cmd_processor{1};
-  auto testWriter = std::make_shared<bulk::TestWriter>();
-  cmd_processor.subscribe(testWriter);
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
 
   std::stringstream ss;
   ss << "cmd1";
 
   cmd_processor.process(ss);
 
-  EXPECT_EQ(testWriter->get_bulk(), std::vector<std::string>{"cmd1"});
-  EXPECT_NE(testWriter->get_time(), std::time_t{});
+  EXPECT_EQ(test_writer->get_bulk(), std::vector<std::string>{"cmd1"});
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
 }
 
 TEST(cmd_processor_test_case, unsubscribe_test) {
   bulk::CmdProcessor cmd_processor{1};
-  auto testWriter = std::make_shared<bulk::TestWriter>();
-  cmd_processor.subscribe(testWriter);
-  cmd_processor.unsubscribe(testWriter);
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
+  cmd_processor.unsubscribe(test_writer);
 
   std::stringstream ss;
   ss << "cmd1";
 
   cmd_processor.process(ss);
 
-  EXPECT_EQ(testWriter->get_bulk(), std::vector<std::string>{});
-  EXPECT_EQ(testWriter->get_time(), std::time_t{});
+  EXPECT_EQ(test_writer->get_bulk(), std::vector<std::string>{});
+  EXPECT_EQ(test_writer->get_time(), std::time_t{});
+}
+
+TEST(cmd_processor_test_case, partial_bulk_test) {
+  bulk::CmdProcessor cmd_processor{3};
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
+
+  std::stringstream ss;
+  ss << "cmd1" << std::endl;
+  ss << "cmd2" << std::endl;
+
+  cmd_processor.process(ss);
+
+  std::vector<std::string> result{"cmd1", "cmd2"};
+  EXPECT_EQ(test_writer->get_bulk(), result);
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
 }
 
 TEST(cmd_processor_test_case, full_bulk_test) {
   bulk::CmdProcessor cmd_processor{3};
-  auto testWriter = std::make_shared<bulk::TestWriter>();
-  cmd_processor.subscribe(testWriter);
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
 
   std::stringstream ss;
   ss << "cmd1" << std::endl;
@@ -92,29 +108,33 @@ TEST(cmd_processor_test_case, full_bulk_test) {
   cmd_processor.process(ss);
 
   std::vector<std::string> result{"cmd1", "cmd2", "cmd3"};
-  EXPECT_EQ(testWriter->get_bulk(), result);
-  EXPECT_NE(testWriter->get_time(), std::time_t{});
+  EXPECT_EQ(test_writer->get_bulk(), result);
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
 }
 
-TEST(cmd_processor_test_case, partial_bulk_test) {
+TEST(cmd_processor_test_case, full_tail_bulk_test) {
   bulk::CmdProcessor cmd_processor{3};
-  auto testWriter = std::make_shared<bulk::TestWriter>();
-  cmd_processor.subscribe(testWriter);
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
 
   std::stringstream ss;
   ss << "cmd1" << std::endl;
   ss << "cmd2" << std::endl;
+  ss << "cmd3" << std::endl;
+  ss << "cmd4" << std::endl;
+  ss << "cmd5" << std::endl;
 
   cmd_processor.process(ss);
 
-  EXPECT_EQ(testWriter->get_bulk(), std::vector<std::string>{});
-  EXPECT_EQ(testWriter->get_time(), std::time_t{});
+  std::vector<std::string> result{"cmd4", "cmd5"};
+  EXPECT_EQ(test_writer->get_bulk(), result);
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
 }
 
 TEST(cmd_processor_test_case, partial_dyn_bulk_test) {
   bulk::CmdProcessor cmd_processor{3};
-  auto testWriter = std::make_shared<bulk::TestWriter>();
-  cmd_processor.subscribe(testWriter);
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
 
   std::stringstream ss;
   ss << "cmd1" << std::endl;
@@ -128,14 +148,14 @@ TEST(cmd_processor_test_case, partial_dyn_bulk_test) {
   cmd_processor.process(ss);
 
   std::vector<std::string> result{"cmd1", "cmd2"};
-  //EXPECT_EQ(testWriter->get_bulk(), result);
-  //EXPECT_NE(testWriter->get_time(), std::time_t{});
+  EXPECT_EQ(test_writer->get_bulk(), result);
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
 }
 
 TEST(cmd_processor_test_case, full_dyn_bulk_test) {
   bulk::CmdProcessor cmd_processor{3};
-  auto testWriter = std::make_shared<bulk::TestWriter>();
-  cmd_processor.subscribe(testWriter);
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
 
   std::stringstream ss;
   ss << "cmd1" << std::endl;
@@ -150,8 +170,56 @@ TEST(cmd_processor_test_case, full_dyn_bulk_test) {
   cmd_processor.process(ss);
 
   std::vector<std::string> result{"cmd3", "cmd4", "cmd5", "cmd6"};
-  //EXPECT_EQ(testWriter->get_bulk(), result);
-  //EXPECT_NE(testWriter->get_time(), std::time_t{});
+  EXPECT_EQ(test_writer->get_bulk(), result);
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
+}
+
+TEST(cmd_processor_test_case, full_dyn_bulk_1_test) {
+  bulk::CmdProcessor cmd_processor{3};
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
+
+  std::stringstream ss;
+  ss << "cmd1" << std::endl;
+  ss << "cmd2" << std::endl;
+  ss << "{" << std::endl;
+  ss << "cmd3" << std::endl;
+  ss << "{" << std::endl;
+  ss << "cmd4" << std::endl;
+  ss << "cmd5" << std::endl;
+  ss << "}" << std::endl;
+  ss << "cmd6" << std::endl;
+  ss << "}" << std::endl;
+
+  cmd_processor.process(ss);
+
+  std::vector<std::string> result{"cmd3", "cmd4", "cmd5", "cmd6"};
+  EXPECT_EQ(test_writer->get_bulk(), result);
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
+}
+
+TEST(cmd_processor_test_case, eof_bulk_test) {
+  bulk::CmdProcessor cmd_processor{3};
+  auto test_writer = std::make_shared<bulk::TestWriter>();
+  cmd_processor.subscribe(test_writer);
+
+  std::stringstream ss;
+  ss << "cmd1" << std::endl;
+  ss << "cmd2" << std::endl;
+  ss << "{" << std::endl;
+  ss << "cmd3" << std::endl;
+  ss << "cmd4" << std::endl;
+  ss << "cmd5" << std::endl;
+  ss << "cmd6" << std::endl;
+  ss << "}" << std::endl;
+  ss << "cmd7" << std::endl;
+  ss << "cmd8" << std::endl;
+
+  cmd_processor.process(ss);
+
+  std::vector<std::string> result{"cmd7", "cmd8"};
+  EXPECT_EQ(test_writer->get_bulk(), result);
+  EXPECT_NE(test_writer->get_time(), std::time_t{});
 }
 
 int main(int argc, char *argv[]) {
