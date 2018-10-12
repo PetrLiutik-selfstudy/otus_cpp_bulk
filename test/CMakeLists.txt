@@ -35,3 +35,4 @@ target_link_libraries(${PROJECT_NAME} gtest pthread )
 
 add_test(ver_test_case ${PROJECT_NAME})
 add_test(cmd_processor_test_case ${PROJECT_NAME})
+add_test(console_writer_test_case ${PROJECT_NAME})

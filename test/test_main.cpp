@@ -222,6 +222,18 @@ TEST(cmd_processor_test_case, eof_bulk_test) {
   EXPECT_NE(test_writer->get_time(), std::time_t{});
 }
 
+TEST(console_writer_test_case, write_test) {
+  std::stringstream ss;
+  auto console_writer = std::make_shared<bulk::ConsoleWriter>(ss);
+  std::time_t time{};
+  std::vector<std::string> bulk{"cmd1", "cmd2", "cmd3"};
+  console_writer->write(time, bulk);
+  std::cout << ss.str() << std::endl;
+
+  std::string result{"bulk: cmd1, cmd2, cmd3\n"};
+  EXPECT_EQ(ss.str(), result);
+}
+
 int main(int argc, char *argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
