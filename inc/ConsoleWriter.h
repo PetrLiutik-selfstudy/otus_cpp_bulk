@@ -2,6 +2,9 @@
 
 #include "../inc/IStreamWriter.h"
 
+#include <iostream>
+#include <ostream>
+
 namespace bulk {
 
 /**
@@ -9,7 +12,13 @@ namespace bulk {
  */
 class ConsoleWriter : public IStreamWriter {
   public:
-    ConsoleWriter() = default;
+    /**
+     * @brief Консруктор.
+     * @param os - поток для вывода.
+     */
+    explicit ConsoleWriter(std::ostream& os = std::cout) : os_(os) {
+    }
+
     ~ConsoleWriter() override = default;
 
     /**
@@ -18,6 +27,10 @@ class ConsoleWriter : public IStreamWriter {
      * @param bulk - блок команд.
      */
     void write(const std::time_t& time, const std::vector<std::string>& bulk) final;
+
+  private:
+    /// Поток для вывода.
+    std::ostream& os_;
 };
 
 } // namespace bulk.

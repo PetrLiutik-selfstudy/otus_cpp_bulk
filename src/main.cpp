@@ -29,16 +29,16 @@ int main(int argc, char const *argv[])
 
   bulk::CmdProcessor cmd_processor(static_cast<size_t>(bulk_size));
 
-  auto fileWriter = std::make_shared<bulk::FileWriter>();
-  auto consoleWriter = std::make_shared<bulk::ConsoleWriter>();
+  auto file_writer = std::make_shared<bulk::FileWriter>();
+  auto console_writer = std::make_shared<bulk::ConsoleWriter>();
 
-  cmd_processor.subscribe(fileWriter);
-  cmd_processor.subscribe(consoleWriter);
+  cmd_processor.subscribe(file_writer);
+  cmd_processor.subscribe(console_writer);
 
   cmd_processor.process(std::cin);
 
-  cmd_processor.unsubscribe(consoleWriter);
-  cmd_processor.unsubscribe(fileWriter);
+  cmd_processor.unsubscribe(console_writer);
+  cmd_processor.unsubscribe(file_writer);
 
   return 0;
 }

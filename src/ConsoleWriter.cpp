@@ -6,9 +6,9 @@
 namespace bulk {
 
 void ConsoleWriter::write(const std::time_t&, const std::vector<std::string>& bulk) {
-  std::cout << "bulk: ";
+  os_ << "bulk: ";
   for(const auto &it : bulk) {
-    std::cout << it << (&it != &bulk.back() ? ", " : "\n");
+    os_ << it << (&it != &bulk.back() ? ", " : "\n");
   }
 }
 
